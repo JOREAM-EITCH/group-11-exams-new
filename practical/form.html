@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/site.css" />
+    <title>Form</title>
+  </head>
+  <body>
+    <div class="header">
+      <div class="toggle">
+        <a id="toggle-nav"><i class="fa fa-navicon cog"></i></a>
+      </div>
+    </div>
+    <div class="container">
+      <div class="sidebar" id="sidebar">
+        <a href="dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="form.html"><i class="fa fa-shopping-cart"></i> Forms</a>
+        <a href="tables.html"><i class="fa fa-shopping-bag"></i> Tables</a>
+      </div>
+      <div class="content">
+        <div class="left">
+          <h3>Product Registration</h3>
+          <div class="section-container">
+            <div class="section-header">Enter product details</div>
+            <div class="section-content">
+              <form action="">
+                <label class="label" for="product">Product Name</label>
+                <input type="text" /><br />
+                <label class="label" for="price">Price</label>
+                <input type="number" /><br />
+                <label class="label" for="category">Quantity</label>
+                <input name="quantity" id="quantity" type="number" />
+                <label class="label" for="description">Description</label>
+                <textarea rows="6" name="description" id=""></textarea>
+                <button class="form-button" id="save">Save</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="right"></div>
+      </div>
+    </div>
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="span">&times;</span>
+        <h3>Message</h3>
+        <p>Edit me for success and error messages</p>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $("document").ready(() => {
+    $("#save").click((e) => {
+        e.preventDefault();
+        
+        // Get form values
+        const productName = $("input[type='text']").val().trim();
+        const price = $("input[type='number']").first().val().trim();
+        const quantity = $("#quantity").val().trim();
+        const description = $("textarea").val().trim();
+        
+        // Validation
+        let isValid = true;
+        let errorMessage = "";
+        
+        // Product Name validation
+        if (!productName) {
+            isValid = false;
+            errorMessage += "Product Name is required.<br>";
+        } else if (productName.length < 5 || productName.length > 50) {
+            isValid = false;
+            errorMessage += "Product Name must be between 5 and 50 characters.<br>";
+        }
+        
+        // Price validation
+        if (!price) {
+            isValid = false;
+            errorMessage += "Price is required.<br>";
+        } else if (parseFloat(price) <= 0) {
+            isValid = false;
+            errorMessage += "Price must be greater than 0.<br>";
+        }
+        
+        // Quantity validation
+        if (!quantity) {
+            isValid = false;
+            errorMessage += "Quantity is required.<br>";
+        } else if (parseFloat(quantity) <= 0) {
+            isValid = false;
+            errorMessage += "Quantity must be greater than 0.<br>";
+        }
+        
+        // Description validation
+        if (!description) {
+            isValid = false;
+            errorMessage += "Description is required.<br>";
+        } else if (description.length < 5 || description.length > 200) {
+            isValid = false;
+            errorMessage += "Description must be between 5 and 200 characters.<br>";
+        }
+        
+        if (!isValid) {
+            // Show validation errors in modal
+            $("#myModal p").html(errorMessage);
+            $("#myModal").css("display", "block");
+            return;
+        }
+        
+        // Submit data to API
+        const productData = {
+            name: productName,
+            price: parseFloat(price),
+            quantity: parseInt(quantity),
+            description: description
+        };
+        
+        $.ajax({
+            url: "http://localhost:3000/products/",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(productData),
+            success: function(response) {
+                // Show success message
+                $("#myModal p").html("Product saved successfully! ID: " + response.id);
+                $("#myModal").css("display", "block");
+                
+                // Clear form
+                $("input[type='text']").val("");
+                $("input[type='number']").val("");
+                $("#quantity").val("");
+                $("textarea").val("");
+            },
+            error: function(xhr, status, error) {
+                // Show error message
+                $("#myModal p").html("Error saving product: " + (xhr.responseJSON?.error || "Unknown error"));
+                $("#myModal").css("display", "block");
+            }
+        });
+    });
+
+    $("#span").click((e) => {
+        e.preventDefault();
+        $("#myModal").css("display", "none");
+    });
+});
+    </script>
+  </body>
+</html>

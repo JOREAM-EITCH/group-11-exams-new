@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="./css/site.css" />
+  </head>
+  <body>
+    <div class="header">
+      <div class="toggle">
+        <a id="toggle-nav"><i class="fa fa-navicon cog"></i></a>
+      </div>
+    </div>
+    <div class="container">
+      <div class="sidebar" id="sidebar">
+        <a href="dashboard.html"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="form.html"><i class="fa fa-shopping-cart"></i> Forms</a>
+        <a href="tables.html"><i class="fa fa-shopping-bag"></i> Tables</a>
+      </div>
+      <div class="content">
+        <div class="summary-container">
+          <div class="summary">
+            <div class="summary-icon"><i class="fa fa-users"></i></div>
+            <div class="summary-content">
+              <div class="summary-heading">Users</div>
+              <div><h2>0</h2></div>
+            </div>
+          </div>
+          <div class="summary">
+            <div class="summary-icon"><i class="fa fa-signal"></i></div>
+            <div class="summary-content">
+              <div class="summary-heading">Products</div>
+              <div><h2>0</h2></div>
+            </div>
+          </div>
+          <div class="summary">
+            <div class="summary-icon"><i class="fa fa-shopping-cart"></i></div>
+            <div class="summary-content">
+              <div class="summary-heading">Sales</div>
+              <div><h2>0</h2></div>
+            </div>
+          </div>
+          <div class="summary">
+            <div class="summary-icon"><i class="fa fa-line-chart"></i></div>
+            <div class="summary-content">
+              <div class="summary-heading">Profit</div>
+              <div><h2>0</h2></div>
+            </div>
+          </div>
+        </div>
+        <div class="charts-container">
+          <!-- This is the chart content section-->
+          <h4>Implement here..</h4>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+     
+        // Your js here
+$("document").ready(() => {
+    // Add responsive CSS for sidebar behavior
+    const style = document.createElement('style');
+    style.textContent = `
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+                position: absolute;
+                z-index: 1000;
+                height: 100vh;
+                background-color: rgb(60, 76, 203);
+            }
+            .toggle {
+                visibility: visible !important;
+            }
+        }
+        @media (min-width: 1025px) {
+            .sidebar {
+                display: block !important;
+            }
+            .toggle {
+                visibility: hidden !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Toggle sidebar visibility when navicon is clicked
+    $("#toggle-nav").click((e) => {
+        e.preventDefault();
+        $("#sidebar").toggle();
+    });
+
+    // Fetch statistics from API and update dashboard cards
+    $.get("http://localhost:3000/dash_statistics", function(data) {
+        $(".summary:nth-child(1) h2").text(data.users);
+        $(".summary:nth-child(2) h2").text(data.products);
+        $(".summary:nth-child(3) h2").text(data.sales);
+        $(".summary:nth-child(4) h2").text("$" + data.profit);
+    }).fail(function(error) {
+        console.error("Failed to fetch statistics data:", error);
+    });
+
+    // Create charts container structure
+    $(".charts-container").html(`
+        <div class="chart-row">
+            <div class="chart-card">
+                <h4 class="red">Sales Scatter Chart</h4>
+                <canvas id="scatterChart" width="400" height="300"></canvas>
+            </div>
+            <div class="chart-card">
+                <h4 class="purple">Visitors Line Chart</h4>
+                <canvas id="lineChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+        <div class="chart-row">
+            <div class="chart-card">
+                <h4 class="magenta">Categories Trend</h4>
+                <canvas id="pieChart" width="400" height="300"></canvas>
+            </div>
+            <div class="chart-card">
+                <h4 class="l">Product trend</h4>
+                <canvas id="barChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    `);
+
+    // Fetch and create scatter chart (Sales data)
+    $.get("http://localhost:3000/sales", function(salesData) {
+        const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+        new Chart(scatterCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Sales Data',
+                    data: salesData,
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'X Values' } },
+                    y: { title: { display: true, text: 'Y Values' } }
+                }
+            }
+        });
+    });
+
+    // Fetch and create line chart (Visitors data)
+    $.get("http://localhost:3000/visitors", function(visitorsData) {
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: visitorsData.day,
+                datasets: [{
+                    label: 'Daily Visitors',
+                    data: visitorsData.count,
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    });
+
+    // Fetch and create pie chart (Top Products data)
+    $.get("http://localhost:3000/sold_products", function(data) {
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: data.category,
+                datasets: [{
+                    label: 'Top selling product categories',
+                    data: data.count,
+                    flexible: true
+
+                    ,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    });
+
+    // Fetch and create bar chart (Sold Products data)
+    $.get("http://localhost:3000/top_products", function(soldProductsData) {
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: soldProductsData.product,
+                datasets: [{
+                    label: 'Best Selling',
+                    data: soldProductsData.count,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    });
+});
+
+
+
+
+
+
+        //end nere
+  
+    </script>
+  </body>
+</html>
